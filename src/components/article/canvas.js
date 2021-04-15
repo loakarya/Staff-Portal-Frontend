@@ -30,6 +30,7 @@ export default function Article(props) {
   const [slug, setSlug] = useState("");
 
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [articleSaving, setArticleSaving] = useState(false);
@@ -47,91 +48,126 @@ export default function Article(props) {
       setCategory(props.article.category);
     }
 
-    Axios.get("/article/category").then((response) => {
-      setCategories(response.data);
-    });
+    setCategoriesLoading(true);
+    Axios.get("/article/category")
+      .then((response) => {
+        setCategories(response.data);
+      })
+      .finally(() => setCategoriesLoading(false));
   }, []);
 
-  const handlePublishArticle = () => {
-    if (!title || !subtitle || !content || !thumbnail || !category) {
+  const validateFilledField = () => {
+    let error = [];
+
+    if (!title) {
+      error.push("title");
+    }
+
+    if (!subtitle) {
+      error.push("subtitle");
+    }
+
+    if (!content) {
+      error.push("content");
+    }
+
+    if (!thumbnail) {
+      error.push("thumbnail");
+    }
+
+    if (!category) {
+      error.push("category");
+    }
+
+    if (error.length > 0) {
+      let errorString = "";
+      error.map((e, i) => {
+        if (i + 1 != error.length) errorString += `${e}, `;
+        else errorString += `${e}. `;
+      });
       setTimeout(
-        () => handleSnackbarOpen("Please fill all the required section!"),
+        () =>
+          handleSnackbarOpen(
+            `Please fill all the required section! missing field: ${errorString}`
+          ),
         500
       );
-    } else {
-      setArticleSaving(true);
-      Axios.put(
-        "/article",
-        {
-          title,
-          subtitle,
-          category,
-          content,
-          thumbnail_url: thumbnail,
-          slug: title
-            .toLowerCase()
-            .replace(/[^a-zA-Z ]/g, "")
-            .replace(/[ ]/g, "-"),
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + cookies.access_token,
-          },
-        }
-      )
-        .then(() => {
-          handleSnackbarOpen(
-            "The article has been saved, redirecting to menu..."
-          );
-          setTimeout(() => setRedirect("/article"), 2000);
-        })
-        .catch((error) => {
-          console.log(error.response);
-          handleSnackbarOpen("Failed to create article.");
-        })
-        .finally(() => setArticleSaving(false));
+      return false;
     }
+    return true;
+  };
+
+  const handlePublishArticle = () => {
+    if (!validateFilledField()) return;
+    setArticleSaving(true);
+    Axios.put(
+      "/article",
+      {
+        title,
+        subtitle,
+        category,
+        content,
+        thumbnail_url: thumbnail,
+        slug: title
+          .toLowerCase()
+          .replace(/[^a-zA-Z ]/g, "")
+          .replace(/[ ]/g, "-"),
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + cookies.access_token,
+        },
+      }
+    )
+      .then(() => {
+        handleSnackbarOpen(
+          "The article has been saved, redirecting to menu..."
+        );
+        setTimeout(() => setRedirect("/article"), 2000);
+      })
+      .catch((error) => {
+        console.log(error.response);
+        handleSnackbarOpen("Failed to create article.");
+      })
+      .finally(() => setArticleSaving(false));
   };
 
   const handleUpdateArticle = () => {
-    if (!title || !subtitle || !content || !thumbnail || !category) {
-      setTimeout(
-        () => handleSnackbarOpen("Please fill all the required section!"),
-        500
-      );
-    } else {
-      setArticleSaving(true);
-      Axios.patch(
-        `/article/${props.article.id}`,
-        {
-          title,
-          subtitle,
-          category,
-          content,
-          thumbnail_url: thumbnail,
-          slug: title
-            .toLowerCase()
-            .replace(/[^a-zA-Z ]/g, "")
-            .replace(/[ ]/g, "-"),
+    if (!validateFilledField()) return;
+
+    setArticleSaving(true);
+    Axios.patch(
+      props.master
+        ? `/article/${props.article.id}`
+        : `/article/man/${props.article.id}`,
+      {
+        title,
+        subtitle,
+        category,
+        content,
+        thumbnail_url: thumbnail,
+        slug: title
+          .toLowerCase()
+          .replace(/[^a-zA-Z ]/g, "")
+          .replace(/[ ]/g, "-"),
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + cookies.access_token,
         },
-        {
-          headers: {
-            Authorization: "Bearer " + cookies.access_token,
-          },
-        }
-      )
-        .then(() => {
-          handleSnackbarOpen(
-            "The article has been updated, redirecting to menu..."
-          );
-          setTimeout(() => setRedirect("/article"), 2000);
-        })
-        .catch((error) => {
-          console.log(error.response);
-          handleSnackbarOpen("Failed to update article.");
-        })
-        .finally(() => setArticleSaving(false));
-    }
+      }
+    )
+      .then(() => {
+        handleSnackbarOpen(
+          "The article has been updated, redirecting to menu..."
+        );
+        setTimeout(() => setRedirect("/article"), 2000);
+      })
+      .catch((error) => {
+        console.log(error.response);
+        handleSnackbarOpen("Failed to update article.");
+      })
+      .finally(() => setArticleSaving(false));
   };
 
   const uploadThumbnail = (event) => {
@@ -311,6 +347,9 @@ export default function Article(props) {
               <b> Category </b>
             </Typography>
             <form>
+              {categoriesLoading ? (
+                <CircularProgress size={24} style={{ marginTop: 5 }} />
+              ) : null}
               {categories.map((cat) => {
                 let radioChecked = false;
                 if (cat.id == category) radioChecked = true;
