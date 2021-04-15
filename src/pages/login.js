@@ -15,8 +15,12 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 import Snackbar from "@material-ui/core/Snackbar";
 import { makeStyles } from "@material-ui/core/styles";
 
+import GoogleLogo from "../assets/google_logo.png";
+import LoakaryaLogo from "../assets/logo.png";
+
 import { Redirect } from "react-router-dom";
 import { CookiesProvider, useCookies } from "react-cookie";
+import GoogleLogin from "react-google-login";
 import Axios from "axios";
 
 function Copyright() {
@@ -102,7 +106,7 @@ export default function Login() {
           "Logged in, you will be redirected to the dashboard page..."
         );
         setTimeout(() => {
-          setRedirect("/");
+          window.location.href = "/";
         }, 2000);
       })
       .catch((error) => {
@@ -111,6 +115,26 @@ export default function Login() {
       })
       .finally(() => {
         setLoading(false);
+      });
+  };
+
+  const responseGoogle = (response) => {
+    Axios.post("/auth/login/google", {
+      token: response.getAuthResponse().id_token,
+    })
+      .then((response) => {
+        removeCookie("access_token");
+        setCookie("access_token", response.data.access_token);
+        handleSnackbarOpen(
+          "Logged in, you will be redirected to the dashboard page..."
+        );
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+      })
+      .catch((error) => {
+        console.log(error.response);
+        handleSnackbarOpen("Failed to login, please recheck your credentials.");
       });
   };
 
@@ -123,11 +147,9 @@ export default function Login() {
         <Grid item xs={false} sm={4} md={7} className={classes.image} />
         <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
           <div className={classes.paper}>
-            <Avatar className={classes.avatar}>
-              <LockOutlinedIcon />
-            </Avatar>
-            <Typography component="h1" variant="h5">
-              Sign in
+            <img src={LoakaryaLogo} height={28} />
+            <Typography component="h1" variant="h5" style={{ marginTop: 10 }}>
+              Staff Portal
             </Typography>
             <form className={classes.form}>
               <TextField
@@ -167,23 +189,36 @@ export default function Login() {
                 color="primary"
                 // className={classes.submit}
                 onClick={handleLogin}
-                style={{ marginBottom: 24 }}
+                style={{ marginBottom: 10 }}
+                disabled={loading}
               >
                 Sign In
               </Button>
-
-              <Grid container>
-                <Grid item xs>
-                  <Link href="#" variant="body2">
-                    Forgot password?
-                  </Link>
-                </Grid>
-                <Grid item>
-                  <Link href="#" variant="body2">
-                    {"Don't have an account? Sign Up"}
-                  </Link>
-                </Grid>
-              </Grid>
+              <GoogleLogin
+                clientId={process.env.REACT_APP_GOOGLEAPI_CLIENT_ID}
+                render={(renderProps) => (
+                  <Button
+                    fullWidth
+                    onClick={renderProps.onClick}
+                    disabled={renderProps.disabled}
+                    variant="contained"
+                    style={{ backgroundColor: "white", marginBottom: 24 }}
+                  >
+                    <img
+                      height={18}
+                      src={GoogleLogo}
+                      style={{ marginRight: 10 }}
+                    />
+                    Sign In With Google
+                  </Button>
+                )}
+                onSuccess={responseGoogle}
+                onFailure={responseGoogle}
+                cookiePolicy={"single_host_origin"}
+              />
+              <Link href="#" variant="body2">
+                Forgot password?
+              </Link>
               <Box mt={5}>
                 <Copyright />
               </Box>
