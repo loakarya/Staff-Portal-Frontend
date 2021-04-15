@@ -25,18 +25,18 @@ import { Doughnut, Bar, Line } from "react-chartjs-2";
 export default function Home(props) {
   const [cookies, setCookies, removeCookies] = useCookies();
 
-  const [user, setUser] = useState([]);
-  const [userLoaded, setUserLoaded] = useState(false);
+  const [employee, setEmployee] = useState([]);
+  const [employeeLoaded, setEmployeeLoaded] = useState(false);
   const [news, setNews] = useState([]);
 
   useEffect(() => {
-    Axios.get("/auth/me", {
+    Axios.get("/employee/me", {
       headers: {
-        Authorization: "Bearer " + cookies.access_token,
+        Authorization: `Bearer ${cookies.access_token}`,
       },
     }).then((response) => {
-      setUser(response.data);
-      setUserLoaded(true);
+      setEmployee(response.data);
+      setEmployeeLoaded(true);
     });
 
     Axios.get(
@@ -46,7 +46,7 @@ export default function Home(props) {
       .catch((error) => console.log(error.response));
   }, []);
 
-  if (!userLoaded)
+  if (!employeeLoaded)
     return (
       <MiniDrawer master={props.master}>
         <LoadingData />
@@ -58,7 +58,7 @@ export default function Home(props) {
       <Grid container spacing={2}>
         <Grid item xs={12} sm={9}>
           <Typography variant="h5" style={{ marginBottom: 12 }}>
-            Welcome aboard, {user.first_name}!
+            Welcome aboard, {employee.user.first_name}!
           </Typography>
           <TableContainer component={Paper}>
             <Table size="small">
@@ -78,38 +78,56 @@ export default function Home(props) {
                     Access Control Level
                   </TableCell>
                   <TableCell align="right">
-                    {user.acl === 1 ? "Administrator" : "Master"}
+                    {employee.acl === 1 ? "Administrator" : "Master"}
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell component="th" scope="row">
-                    Division
+                    Level
                   </TableCell>
-                  <TableCell align="right">DOR</TableCell>
+                  <TableCell align="right">{employee.level}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell component="th" scope="row">
-                    Position
+                    Chapter
                   </TableCell>
-                  <TableCell align="right">DOR</TableCell>
+                  <TableCell align="right">{employee.chapter}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell component="th" scope="row">
-                    Email
+                    Status
                   </TableCell>
-                  <TableCell align="right">{user.email}</TableCell>
+                  <TableCell align="right">{employee.status}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Role
+                  </TableCell>
+                  <TableCell align="right">{employee.role}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Vompany Email
+                  </TableCell>
+                  <TableCell align="right">{employee.user.email}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell component="th" scope="row">
+                    Private Email
+                  </TableCell>
+                  <TableCell align="right">{employee.private_email}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell component="th" scope="row">
                     Last login time
                   </TableCell>
-                  <TableCell align="right">DOR</TableCell>
+                  <TableCell align="right">Unknown</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell component="th" scope="row">
                     Last login IP
                   </TableCell>
-                  <TableCell align="right">{user.last_ip}</TableCell>
+                  <TableCell align="right">{employee.user.last_ip}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

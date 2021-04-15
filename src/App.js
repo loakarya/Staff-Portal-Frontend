@@ -36,7 +36,7 @@ function App() {
   const [master, setMaster] = useState(false);
 
   useEffect(() => {
-    Axios.get("/auth/me", {
+    Axios.get("/employee/me", {
       headers: {
         Authorization: `Bearer ${cookies.access_token}`,
       },
@@ -104,6 +104,10 @@ function ApplicationRoute(props) {
       ) : null}
       <Route path="/auth/catch">
         <h1>Tertangkap kamu!</h1>
+        <h2>{query.get("code")}</h2>
+      </Route>
+      <Route path="/api/auth/google">
+        <h1>Tertangkap kamu google!</h1>
         <h2>{query.get("code")}</h2>
       </Route>
     </Switch>

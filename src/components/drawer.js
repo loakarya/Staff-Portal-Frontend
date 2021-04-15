@@ -156,7 +156,7 @@ export default function MiniDrawer(props) {
   useEffect(() => {
     setMaster(props.master);
 
-    Axios.get("/auth/me", {
+    Axios.get("/employee/me", {
       headers: {
         Authorization: `Bearer ${cookies.access_token}`,
       },
