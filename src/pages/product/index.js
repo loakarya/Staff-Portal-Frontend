@@ -61,17 +61,18 @@ export default function IndexProduct(props) {
   const classes = useStyles();
   const [products, setProducts] = useState([]);
   const [productsLoaded, setProductsLoaded] = useState(false);
-  const [addNewProductDialog, setAddNewProductDialog] = useState(false);
-  const [editProductDialog, setEditProductDialog] = useState(false);
-  const [addNewProductLoading, setAddNewProductLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogStateEdit, setDialogStateEdit] = useState(false);
+  const [dialogLoading, setDialogLoading] = useState(false);
   const [productDeletionDialog, setProductDeletionDialog] = useState(false);
   const [productDeletionId, setProductDeletionId] = useState();
   const [productDeletionName, setProductDeletionName] = useState();
 
+  const [productId, setProductId] = useState(0);
   const [productName, setProductName] = useState("");
-  const [productDetail, setProductDetail] = useState();
-  const [productMaterial, setProductMaterial] = useState();
-  const [productThumbnailPicture, setProductThumbnailPicture] = useState();
+  const [productDetail, setProductDetail] = useState("");
+  const [productMaterial, setProductMaterial] = useState("");
+  const [productThumbnailPicture, setProductThumbnailPicture] = useState("");
   const [productShowcasePicture, setProductShowcasePicture] = useState([
     undefined,
     undefined,
@@ -79,12 +80,12 @@ export default function IndexProduct(props) {
     undefined,
     undefined,
   ]);
-  const [productPrice, setProductPrice] = useState();
-  const [productDiscount, setProductDiscount] = useState();
-  const [productCategory, setProductCategory] = useState();
-  const [productTokopediasLink, setProductTokopediasLink] = useState();
-  const [productBukalapaksLink, setProductBukalapaksLink] = useState();
-  const [productShopeesLink, setProductShopeesLink] = useState();
+  const [productPrice, setProductPrice] = useState("");
+  const [productDiscount, setProductDiscount] = useState("");
+  const [productCategory, setProductCategory] = useState("0");
+  const [productTokopediasLink, setProductTokopediasLink] = useState("");
+  const [productBukalapaksLink, setProductBukalapaksLink] = useState("");
+  const [productShopeesLink, setProductShopeesLink] = useState("");
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarText, setSnackbarText] = useState("");
@@ -136,10 +137,10 @@ export default function IndexProduct(props) {
   };
 
   const resetProductState = () => {
-    setProductName(undefined);
-    setProductDetail(undefined);
-    setProductMaterial(undefined);
-    setProductThumbnailPicture(undefined);
+    setProductName("");
+    setProductDetail("");
+    setProductMaterial("");
+    setProductThumbnailPicture("");
     setProductShowcasePicture([
       undefined,
       undefined,
@@ -147,76 +148,112 @@ export default function IndexProduct(props) {
       undefined,
       undefined,
     ]);
-    setProductPrice(undefined);
-    setProductDiscount(undefined);
-    setProductCategory(undefined);
-    setProductTokopediasLink(undefined);
-    setProductBukalapaksLink(undefined);
-    setProductShopeesLink(undefined);
+    setProductPrice("");
+    setProductDiscount("");
+    setProductCategory("0");
+    setProductTokopediasLink("");
+    setProductBukalapaksLink("");
+    setProductShopeesLink("");
   };
 
   const handleAddNewProductButtonSave = () => {
-    if (
-      !productName ||
-      !productDetail ||
-      !productMaterial ||
-      !productThumbnailPicture ||
-      !productShowcasePicture ||
-      !productPrice ||
-      !productDiscount ||
-      !productCategory
-    ) {
-      setTimeout(
-        () => handleSnackbarOpen("Please fill all the required section!"),
-        500
-      );
-    } else {
-      setAddNewProductLoading(true);
-      Axios.put(
-        "/product",
-        {
-          title: productName,
-          slug: productName
-            .toLowerCase()
-            .replace(/[^a-zA-Z ]/g, "")
-            .replace(/[ ]/g, "-"),
-          detail: productDetail,
-          material: productMaterial,
-          thumbnail_url: productThumbnailPicture,
-          picture_url_1: productShowcasePicture[0],
-          picture_url_2: productShowcasePicture[1],
-          picture_url_3: productShowcasePicture[2],
-          picture_url_4: productShowcasePicture[3],
-          picture_url_5: productShowcasePicture[4],
-          price: productPrice,
-          discount: productDiscount,
-          category: parseInt(productCategory),
-          tokopedia_order_link: productTokopediasLink,
-          bukalapak_order_link: productBukalapaksLink,
-          shopee_order_link: productShopeesLink,
+    if (!validateFilledField()) return;
+
+    setDialogLoading(true);
+    Axios.put(
+      "/product",
+      {
+        title: productName,
+        slug: productName
+          .toLowerCase()
+          .replace(/[^a-zA-Z ]/g, "")
+          .replace(/[ ]/g, "-"),
+        detail: productDetail,
+        material: productMaterial,
+        thumbnail_url: productThumbnailPicture,
+        picture_url_1: productShowcasePicture[0],
+        picture_url_2: productShowcasePicture[1],
+        picture_url_3: productShowcasePicture[2],
+        picture_url_4: productShowcasePicture[3],
+        picture_url_5: productShowcasePicture[4],
+        price: productPrice,
+        discount: productDiscount,
+        category: parseInt(productCategory),
+        tokopedia_order_link: productTokopediasLink,
+        bukalapak_order_link: productBukalapaksLink,
+        shopee_order_link: productShopeesLink,
+      },
+      {
+        headers: {
+          Authorization: "Bearer " + cookies.access_token,
         },
-        {
-          headers: {
-            Authorization: "Bearer " + cookies.access_token,
-          },
-        }
-      )
-        .then(() => {
-          handleAddNewProductDialogClose();
-          resetProductState();
-          handleSnackbarOpen(
-            "The product has been saved, reloading the index..."
-          );
-          setTimeout(loadProducts, 3000);
-        })
-        .catch((error) => {
-          console.log(error.response);
-          handleSnackbarOpen("Failed to save product");
-        })
-        .finally(() => {
-          setAddNewProductLoading(false);
-        });
-    }
+      }
+    )
+      .then(() => {
+        handleDialogClose();
+        resetProductState();
+        handleSnackbarOpen(
+          "The product has been saved, reloading the index..."
+        );
+        setTimeout(loadProducts, 2000);
+      })
+      .catch((error) => {
+        console.log(error.response);
+        handleSnackbarOpen("Failed to save product");
+      })
+      .finally(() => {
+        setDialogLoading(false);
+      });
+  };
+
+  const handleEditProductButtonSave = () => {
+    if (!validateFilledField()) return;
+
+    setDialogLoading(true);
+    Axios.patch(
+      `/product/${productId}`,
+      {
+        title: productName,
+        slug: productName
+          .toLowerCase()
+          .replace(/[^a-zA-Z ]/g, "")
+          .replace(/[ ]/g, "-"),
+        detail: productDetail,
+        material: productMaterial,
+        thumbnail_url: productThumbnailPicture,
+        picture_url_1: productShowcasePicture[0],
+        picture_url_2: productShowcasePicture[1],
+        picture_url_3: productShowcasePicture[2],
+        picture_url_4: productShowcasePicture[3],
+        picture_url_5: productShowcasePicture[4],
+        price: productPrice,
+        discount: productDiscount,
+        category: parseInt(productCategory),
+        tokopedia_order_link: productTokopediasLink,
+        bukalapak_order_link: productBukalapaksLink,
+        shopee_order_link: productShopeesLink,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${cookies.access_token}`,
+        },
+      }
+    )
+      .then(() => {
+        handleDialogClose();
+        resetProductState();
+        handleSnackbarOpen(
+          "The product has been updated, reloading the index..."
+        );
+        setTimeout(loadProducts, 2000);
+      })
+      .catch((error) => {
+        console.log(error.response);
+        handleSnackbarOpen("Failed to update product");
+      })
+      .finally(() => {
+        setDialogLoading(false);
+      });
   };
 
   const handleProductThumbnailUpload = (event) => {
@@ -251,9 +288,16 @@ export default function IndexProduct(props) {
 
   const handleProductImageUpload = (event) => {
     // console.log(event.target.files[0]);
+    let file = event.target.files[0];
+    if (file.size / 1024 / 1024 > 2) {
+      hideAllUploadButtonShowcase();
+      handleSnackbarOpen("The file size is exceeding 2 MB");
+      return;
+    }
+
     setUploading(true);
     let form = new FormData();
-    form.append("upload", event.target.files[0]);
+    form.append("upload", file);
 
     Axios.post("/product/image", form, {
       headers: {
@@ -264,18 +308,18 @@ export default function IndexProduct(props) {
         handleSnackbarOpen("File uploaded.");
 
         if (!event.target.name) {
-          console.log("Url saved to state for product thumbnail");
-          console.log(response.data.url);
+          // console.log("Url saved to state for product thumbnail");
+          // console.log(response.data.url);
           setThumbnailProgress(true);
           setProductThumbnailPicture(response.data.url);
         } else {
-          console.log("Url saved to state for product showcase");
+          // console.log("Url saved to state for product showcase");
           let showcasePictureBuffer = productShowcasePicture;
           let showcasePictureIndex =
             parseInt(event.target.name.split("-")[1]) - 1;
           showcasePictureBuffer[showcasePictureIndex] = response.data.url;
           setProductShowcasePicture(showcasePictureBuffer);
-          console.log(showcasePictureBuffer);
+          // console.log(showcasePictureBuffer);
         }
       })
       .catch((error) => {
@@ -285,12 +329,16 @@ export default function IndexProduct(props) {
       .finally(() => {
         setUploading(false);
         setThumbnailProgress(false);
-        setShowcase1Progress(false);
-        setShowcase2Progress(false);
-        setShowcase3Progress(false);
-        setShowcase4Progress(false);
-        setShowcase5Progress(false);
+        hideAllUploadButtonShowcase();
       });
+  };
+
+  const hideAllUploadButtonShowcase = () => {
+    setShowcase1Progress(false);
+    setShowcase2Progress(false);
+    setShowcase3Progress(false);
+    setShowcase4Progress(false);
+    setShowcase5Progress(false);
   };
 
   const handleProductDeletionDialogOpen = (id, name) => {
@@ -326,6 +374,29 @@ export default function IndexProduct(props) {
       });
   };
 
+  const handleEditProductDialogOpen = (product) => {
+    setProductId(product.id);
+    setProductName(product.title);
+    setProductDetail(product.detail);
+    setProductMaterial(product.material);
+    setProductThumbnailPicture(product.thumbnail_url);
+    setProductShowcasePicture([
+      product.picture_url_1,
+      product.picture_url_2,
+      product.picture_url_3,
+      product.picture_url_4,
+      product.picture_url_5,
+    ]);
+    setProductPrice(product.price);
+    setProductDiscount(product.discount);
+    setProductCategory(product.category.toString());
+    setProductTokopediasLink(product.tokopedia_order_link);
+    setProductBukalapaksLink(product.bukalapak_order_link);
+    setProductShopeesLink(product.shopee_order_link);
+    setDialogStateEdit(true);
+    setDialogOpen(true);
+  };
+
   useEffect(() => {
     loadProducts();
   }, []);
@@ -345,12 +416,13 @@ export default function IndexProduct(props) {
       </MiniDrawer>
     );
 
-  const handleAddNewProductDialogClose = () => {
-    setAddNewProductDialog(false);
+  const handleDialogClose = () => {
+    setDialogOpen(false);
   };
 
-  const handleAddNewProductDialogOpen = () => {
-    setAddNewProductDialog(true);
+  const handleDialogOpen = () => {
+    resetProductState();
+    setDialogOpen(true);
   };
 
   const handleSnackbarOpen = (message) => {
@@ -362,13 +434,66 @@ export default function IndexProduct(props) {
     setSnackbarOpen(false);
   };
 
+  const validateFilledField = () => {
+    let error = [];
+
+    if (!productName) {
+      error.push("product name");
+    }
+
+    if (!productDetail) {
+      error.push("product detail");
+    }
+
+    if (!productMaterial) {
+      error.push("product material");
+    }
+
+    if (!productThumbnailPicture) {
+      error.push("thumbnail picture");
+    }
+
+    if (!productShowcasePicture) {
+      error.push("showcase picture");
+    }
+
+    if (!productPrice) {
+      error.push("product price");
+    }
+
+    if (!productDiscount && productDiscount !== 0) {
+      error.push("product discount");
+    }
+
+    if (!productCategory && productCategory !== 0) {
+      error.push("product category");
+    }
+
+    if (error.length > 0) {
+      let errorString = "";
+      error.map((e, i) => {
+        if (i + 1 != error.length) errorString += `${e}, `;
+        else errorString += `${e}. `;
+      });
+      setTimeout(
+        () =>
+          handleSnackbarOpen(
+            `Please fill all the required section! missing field: ${errorString}`
+          ),
+        500
+      );
+      return false;
+    }
+    return true;
+  };
+
   return (
     <MiniDrawer title="Product Index" master={props.master}>
       <Button
         variant="contained"
         color="primary"
         style={{ marginBottom: 12 }}
-        onClick={handleAddNewProductDialogOpen}
+        onClick={handleDialogOpen}
         startIcon={<AddIcon />}
       >
         Product
@@ -376,9 +501,11 @@ export default function IndexProduct(props) {
       <Grid container spacing={2}>
         {products.map((product) => {
           return (
-            <Grid item xs={3} key={product.id}>
+            <Grid item xs={12} sm={6} md={3} key={product.id}>
               <Card className={classes.root}>
-                <CardActionArea>
+                <CardActionArea
+                  onClick={() => handleEditProductDialogOpen(product)}
+                >
                   <CardMedia
                     className={classes.media}
                     image={product.thumbnail_url}
@@ -428,14 +555,15 @@ export default function IndexProduct(props) {
           );
         })}
       </Grid>
-      <Dialog
-        open={addNewProductDialog}
-        onClose={handleAddNewProductDialogClose}
-      >
-        <DialogTitle>Add a New Product</DialogTitle>
+      <Dialog open={dialogOpen} onClose={handleDialogClose}>
+        <DialogTitle>
+          {dialogStateEdit ? "Edit Product" : "Add a New Product"}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            For adding a new product, fill in the form below completely.
+            {dialogStateEdit
+              ? "To edit the product, please change the desired section below and then click the update product button."
+              : "To add a new product, please fill in the form below correctly and then click the add product button."}
           </DialogContentText>
           <TextField
             autoFocus
@@ -454,6 +582,8 @@ export default function IndexProduct(props) {
             onChange={handleProductDetailChange}
             value={productDetail}
             type="text"
+            multiline
+            rows={10}
             fullWidth
           />
           <TextField
@@ -466,7 +596,7 @@ export default function IndexProduct(props) {
             fullWidth
           />
           <Typography variant="subtitle2" style={{ marginTop: 20 }}>
-            Product Thumbnail Picture *
+            Product Thumbnail Picture * <b>(Size limit on each file is 2 MB)</b>
           </Typography>
           {productThumbnailPicture ? (
             <img src={productThumbnailPicture} width="100%" />
@@ -509,7 +639,7 @@ export default function IndexProduct(props) {
           </Grid>
 
           <Typography variant="subtitle2" style={{ marginTop: 20 }}>
-            Product Showcase Pictures *
+            Product Showcase Pictures * <b>(Size limit on each file is 2 MB)</b>
           </Typography>
           <Grid container>
             <Grid item xs={4}>
@@ -784,8 +914,8 @@ export default function IndexProduct(props) {
             </FormLabel>
             <RadioGroup
               name="product-category"
-              value={productCategory}
               onChange={handleProductCategoryChange}
+              value={productCategory}
             >
               <FormControlLabel
                 value="0"
@@ -823,17 +953,21 @@ export default function IndexProduct(props) {
             value={productShopeesLink}
             fullWidth
           />
-          {addNewProductLoading ? (
-            <LinearProgress style={{ marginTop: 5 }} />
-          ) : null}
+          {dialogLoading ? <LinearProgress style={{ marginTop: 5 }} /> : null}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleAddNewProductDialogClose} color="primary">
+          <Button onClick={handleDialogClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleAddNewProductButtonSave} color="primary">
-            Add a New Product
-          </Button>
+          {dialogStateEdit ? (
+            <Button onClick={handleEditProductButtonSave} color="primary">
+              Update the Product
+            </Button>
+          ) : (
+            <Button onClick={handleAddNewProductButtonSave} color="primary">
+              Add a New Product
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
       <Snackbar
