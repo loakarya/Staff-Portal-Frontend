@@ -43,6 +43,13 @@ import Axios from "axios";
 
 import ReCAPTCHA from "react-google-recaptcha";
 
+import "date-fns";
+import DateFnsUtils from "@date-io/date-fns";
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from "@material-ui/pickers";
+
 const recaptchaRef = React.createRef();
 
 const useStyles = makeStyles((theme) => ({
@@ -121,86 +128,88 @@ export default function RegisterUser(props) {
   };
 
   const handleSaveEmployee = () => {
-    if (
-      email &&
-      firstName &&
-      lastName &&
-      address &&
-      zipCode &&
-      city &&
-      province &&
-      country &&
-      privateEmail &&
-      bankAccountNumber &&
-      bankAccountProvider &&
-      division &&
-      title &&
-      employeeNumber
-    ) {
-      if (captchaValue) {
-        console.table({
-          email: `${email}@loakarya.co`,
-          first_name: firstName,
-          last_name: lastName,
-          address,
-          zip_code: zipCode,
-          city,
-          province,
-          country,
-          private_email: privateEmail,
-          bank_account_number: bankAccountNumber,
-          bank_account_provider: bankAccountProvider,
-          division,
-          title,
-          employee_number: employeeNumber,
-        });
-        setLoading(true);
-        Axios.put(
-          "/employee",
-          {
-            email: `${email}@loakarya.co`,
-            first_name: firstName,
-            last_name: lastName,
-            address,
-            zip_code: zipCode,
-            city,
-            province,
-            country,
-            private_email: privateEmail,
-            bank_account_number: bankAccountNumber,
-            bank_account_provider: bankAccountProvider,
-            division,
-            title,
-            employee_number: employeeNumber,
-          },
-          {
-            headers: {
-              Authorization: `Bearer${cookies.access_token}`,
-            },
-          }
-        )
-          .then((response) => {
-            setCompanyEmailPassword(response.data.data.company_email_password);
-            handleSnackbarOpen("The new employee account has been saved.");
-            handleNext();
-          })
-          .catch((error) => {
-            console.error(error.response.data);
-            handleSnackbarOpen(
-              "Failed to save the new employee. Please recheck all the filled value."
-            );
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
-        handleSnackbarOpen(
-          "Please finish the reCAPTCHA challange to ensure you are not a robot."
-        );
-      }
-    } else {
-      handleSnackbarOpen("Please fill all the required section!");
-    }
+    // if (
+    //   email &&
+    //   firstName &&
+    //   lastName &&
+    //   address &&
+    //   zipCode &&
+    //   city &&
+    //   province &&
+    //   country &&
+    //   privateEmail &&
+    //   bankAccountNumber &&
+    //   bankAccountProvider &&
+    //   division &&
+    //   title &&
+    //   employeeNumber
+    // ) {
+    //   if (captchaValue) {
+    //     console.table({
+    //       email: `${email}@loakarya.co`,
+    //       first_name: firstName,
+    //       last_name: lastName,
+    //       address,
+    //       zip_code: zipCode,
+    //       city,
+    //       province,
+    //       country,
+    //       private_email: privateEmail,
+    //       bank_account_number: bankAccountNumber,
+    //       bank_account_provider: bankAccountProvider,
+    //       division,
+    //       title,
+    //       employee_number: employeeNumber,
+    //     });
+    //     setLoading(true);
+    //     Axios.put(
+    //       "/employee",
+    //       {
+    //         email: `${email}@loakarya.co`,
+    //         first_name: firstName,
+    //         last_name: lastName,
+    //         address,
+    //         zip_code: zipCode,
+    //         city,
+    //         province,
+    //         country,
+    //         private_email: privateEmail,
+    //         bank_account_number: bankAccountNumber,
+    //         bank_account_provider: bankAccountProvider,
+    //         division,
+    //         title,
+    //         employee_number: employeeNumber,
+    //       },
+    //       {
+    //         headers: {
+    //           Authorization: `Bearer${cookies.access_token}`,
+    //         },
+    //       }
+    //     )
+    //       .then((response) => {
+    //         setCompanyEmailPassword(response.data.data.company_email_password);
+    //         handleSnackbarOpen("The new employee account has been saved.");
+    //         handleNext();
+    //       })
+    //       .catch((error) => {
+    //         console.error(error.response.data);
+    //         handleSnackbarOpen(
+    //           "Failed to save the new employee. Please recheck all the filled value."
+    //         );
+    //       })
+    //       .finally(() => {
+    //         setLoading(false);
+    //       });
+    //   } else {
+    //     handleSnackbarOpen(
+    //       "Please finish the reCAPTCHA challange to ensure you are not a robot."
+    //     );
+    //   }
+    // } else {
+    //   handleSnackbarOpen("Please fill all the required section!");
+    // }
+
+    handleNext();
   };
 
   const handleRedirectToEmployeeList = () => {
@@ -282,6 +291,14 @@ export default function RegisterUser(props) {
     setDialogOpen(false);
   };
 
+  const [selectedDate, setSelectedDate] = React.useState(
+    new Date("1999-01-01T00:00:00.000Z")
+  );
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
   const getStepContent = (step) => {
     switch (step) {
       case 0:
@@ -331,14 +348,51 @@ export default function RegisterUser(props) {
                   fullWidth
                 />
 
-                <TextField
-                  label="Country"
-                  variant="outlined"
-                  style={{ marginTop: 15 }}
-                  value={country}
-                  onChange={handleCountryChange}
-                  fullWidth
-                />
+                <Grid container spacing={5}>
+                  <Grid item>
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                      <KeyboardDatePicker
+                        format="MM/dd/yyyy"
+                        margin="normal"
+                        label="Birthday"
+                        value={selectedDate}
+                        onChange={handleDateChange}
+                        style={{ marginLeft: 7 }}
+                      />
+                    </MuiPickersUtilsProvider>
+                  </Grid>
+                  <Grid item xs>
+                    <div
+                      style={{
+                        height: "100%",
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <FormControl
+                        variant="outlined"
+                        style={{ marginTop: 15, width: "100%" }}
+                      >
+                        <InputLabel htmlFor="user-gender">Gender</InputLabel>
+                        <Select
+                          native
+                          // value={division}
+                          // onChange={handleDivisionChange}
+                          label="Division"
+                          inputProps={{
+                            name: "user-gender",
+                            id: "user-gender",
+                          }}
+                          fullWidth
+                        >
+                          <option value="Perempuan">Female</option>
+                          <option value="Laki-Laki">Male</option>
+                        </Select>
+                      </FormControl>
+                    </div>
+                  </Grid>
+                </Grid>
 
                 <TextField
                   label="Province"
@@ -455,33 +509,104 @@ export default function RegisterUser(props) {
                   fullWidth
                 />
 
+                <TextField
+                  type="number"
+                  label="Phone Number"
+                  variant="outlined"
+                  style={{ marginTop: 15 }}
+                  // value={privateEmail}
+                  // onChange={handlePrivateEmailChange}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">+62</InputAdornment>
+                    ),
+                  }}
+                />
+
+                <FormControl
+                  variant="outlined"
+                  style={{ width: "100%", marginTop: 15 }}
+                >
+                  <InputLabel htmlFor="status-in-loakarya">Status</InputLabel>
+                  <Select
+                    native
+                    // value={division}
+                    // onChange={handleDivisionChange}
+                    label="Division"
+                    inputProps={{
+                      name: "status-in-loakarya",
+                      id: "status-in-loakarya",
+                    }}
+                    fullWidth
+                  >
+                    <option></option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Internship">Internship</option>
+                  </Select>
+                </FormControl>
+
+                <FormControl
+                  variant="outlined"
+                  style={{ width: "100%", marginTop: 15 }}
+                >
+                  <InputLabel htmlFor="level-in-loakarya">Level</InputLabel>
+                  <Select
+                    native
+                    // value={division}
+                    // onChange={handleDivisionChange}
+                    label="Level"
+                    inputProps={{
+                      name: "level-in-loakarya",
+                      id: "level-in-loakarya",
+                    }}
+                    fullWidth
+                  >
+                    <option></option>
+                    <option value="C Level">C Level</option>
+                    <option value="VP">VP</option>
+                    <option value="Head">Head</option>
+                    <option value="Lead">Lead</option>
+                    <option value="Senior">Senior</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Intern">Intern</option>
+                  </Select>
+                </FormControl>
+
                 <Grid container spacing={2} style={{ marginTop: 10 }}>
                   <Grid item xs={12} md={4}>
                     <FormControl variant="outlined" style={{ width: "100%" }}>
-                      <InputLabel htmlFor="division-in-loakarya">
-                        Division
+                      <InputLabel htmlFor="chapter-in-loakarya">
+                        Chapter
                       </InputLabel>
                       <Select
                         native
-                        value={division}
-                        onChange={handleDivisionChange}
-                        label="Division"
+                        // value={division}
+                        // onChange={handleDivisionChange}
+                        label="Chapter"
                         inputProps={{
-                          name: "division-in-loakarya",
-                          id: "division-in-loakarya",
+                          name: "chapter-in-loakarya",
+                          id: "chapter-in-loakarya",
                         }}
                         fullWidth
                       >
                         <option></option>
-                        <option value="Marketing">Marketing</option>
+                        <option value="CEO Office">CEO Office</option>
+                        <option value="Marketing and Growth">
+                          Marketing and Growth
+                        </option>
+                        <option value="Product and Operational">
+                          Product and Operational
+                        </option>
                         <option value="Technology">Technology</option>
-                        <option value="Product">Product</option>
                       </Select>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} md={8}>
                     <TextField
-                      label="Position"
+                      label="Role"
                       variant="outlined"
                       fullWidth
                       value={title}
