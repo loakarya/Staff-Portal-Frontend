@@ -154,6 +154,7 @@ export default function IndexProduct(props) {
     setProductTokopediasLink("");
     setProductBukalapaksLink("");
     setProductShopeesLink("");
+    setDialogStateEdit(false);
   };
 
   const handleAddNewProductButtonSave = () => {
