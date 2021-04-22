@@ -87,7 +87,6 @@ export default function IndexUser(props) {
           <Tab label="Active User" />
           <Tab label="All User" />
           <Tab label="Deleted User" />
-          {props.master ? <Tab label="Manage Access Level" /> : null}
         </Tabs>
       </AppBar>
       <TabPanel value={tabValue} index={0}>
@@ -95,7 +94,6 @@ export default function IndexUser(props) {
       </TabPanel>
       <TabPanel value={tabValue} index={1}></TabPanel>
       <TabPanel value={tabValue} index={2}></TabPanel>
-      {props.master ? <TabPanel value={tabValue} index={3}></TabPanel> : null}
     </MiniDrawer>
   );
 }

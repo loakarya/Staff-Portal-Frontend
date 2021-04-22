@@ -48,6 +48,7 @@ export default function IndexEmployee(props) {
         <Tabs value={tabValue} onChange={handleTabChange}>
           <Tab label="Employee List" />
           <Tab label="Register a New Employee" />
+          {props.master ? <Tab label="Manage Access Level" /> : null}
         </Tabs>
       </AppBar>
       <TabPanel value={tabValue} index={0}>
@@ -56,6 +57,7 @@ export default function IndexEmployee(props) {
       <TabPanel value={tabValue} index={1}>
         <RegisterUser />
       </TabPanel>
+      {props.master ? <TabPanel value={tabValue} index={2}></TabPanel> : null}
     </MiniDrawer>
   );
 }
