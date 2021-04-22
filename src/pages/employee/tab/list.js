@@ -32,6 +32,12 @@ import DialogContent from "@material-ui/core/DialogContent";
 import DialogContentText from "@material-ui/core/DialogContentText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
+import InputLabel from "@material-ui/core/InputLabel";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import FormControl from "@material-ui/core/FormControl";
+import Select from "@material-ui/core/Select";
+import NativeSelect from "@material-ui/core/NativeSelect";
+
 import Typography from "@material-ui/core/Typography";
 
 import { useCookies } from "react-cookie";
@@ -51,15 +57,23 @@ export default function ListEmployee(props) {
   const [dataPerPage, setDataPerPage] = useState(20);
   const [activePage, setActivePage] = useState();
 
-  const [firstName, setFirstName] = useState();
-  const [lastName, setLastName] = useState();
-  const [employeeNumber, setEmployeeNumber] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+
+  const [employeeCode, setEmployeeCode] = useState("");
   const [privateEmail, setPrivateEmail] = useState("");
-  const [companyEmailPassword, setCompanyEmailPassword] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankAccountProvider, setBankAccountProvider] = useState("");
-  const [division, setDivision] = useState("");
-  const [title, setTitle] = useState("");
+
+  const [status, setStatus] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("");
+  const [level, setLevel] = useState("");
+  const [chapter, setChapter] = useState("");
+
+  const [companyEmailPassword, setCompanyEmailPassword] = useState("");
+
+  const [emailError, setEmailError] = useState(false);
 
   useEffect(() => {
     return loadActiveEmployee(1);
@@ -80,15 +94,18 @@ export default function ListEmployee(props) {
   const handleDeleteEmployee = () => {};
 
   const handleEditDialogOpen = (employee) => {
-    setEmployeeNumber(employee.employee.employee_number);
-    setPrivateEmail(employee.employee.private_email);
-    setCompanyEmailPassword(employee.employee.company_email_password);
-    setBankAccountNumber(employee.employee.bank_account_number);
-    setBankAccountProvider(employee.employee.bank_account_provider);
-    setDivision(employee.employee.division);
-    setTitle(employee.employee.title);
-    setFirstName(employee.employee.first_name);
-    setLastName(employee.employee.last_name);
+    setFirstName(employee.user.first_name);
+    setLastName(employee.user.last_name);
+    setEmployeeCode(employee.employee_code);
+    setPrivateEmail(employee.private_email);
+    setBankAccountNumber(employee.bank_account_number);
+    setBankAccountProvider(employee.bank_account_provider);
+    setStatus(employee.status);
+    setPhone(employee.phone);
+    setRole(employee.role);
+    setLevel(employee.level);
+    setChapter(employee.chapter);
+    setCompanyEmailPassword(employee.company_email_password);
     setEditDialog(true);
   };
 
@@ -142,26 +159,43 @@ export default function ListEmployee(props) {
     loadActiveEmployee(page);
   };
 
-  const handleEmployeeNumberChange = (event) => {
-    setEmployeeNumber(event.target.value);
-  };
-  const handlePrivateEmailChange = (event) => {
-    setPrivateEmail(event.target.value);
-  };
-  const handleCompanyEmailPasswordChange = (event) => {
-    setCompanyEmailPassword(event.target.value);
-  };
   const handleBankAccountNumberChange = (event) => {
     setBankAccountNumber(event.target.value);
   };
+
   const handleBankAccountProviderChange = (event) => {
     setBankAccountProvider(event.target.value);
   };
-  const handleDivisionChange = (event) => {
-    setDivision(event.target.value);
+
+  const handleChapterChange = (event) => {
+    setChapter(event.target.value);
   };
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
+
+  const handleRoleChange = (event) => {
+    setRole(event.target.value);
+  };
+
+  const handleEmployeeCodeChange = (event) => {
+    setEmployeeCode(event.target.value);
+  };
+
+  const handlePhoneChange = (event) => {
+    setPhone(event.target.value);
+  };
+
+  const handleStatusChange = (event) => {
+    setStatus(event.target.value);
+  };
+
+  const handleLevelChange = (event) => {
+    setLevel(event.target.value);
+  };
+
+  const handlePrivateEmailChange = (event) => {
+    setPrivateEmail(event.target.value);
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(event.target.value)) setEmailError(true);
+    else setEmailError(false);
   };
 
   return (
@@ -315,9 +349,8 @@ export default function ListEmployee(props) {
       {employeeLoaded ? (
         employees.data.map((employee) => {
           return (
-            <UserCard user={employee} key={employee.id}>
+            <UserCard user={employee.user} key={employee.id}>
               <ButtonGroup color="primary">
-                <Button startIcon={<VisibilityIcon />}>View</Button>
                 <Button
                   startIcon={<EditIcon />}
                   onClick={() => handleEditDialogOpen(employee)}
@@ -329,7 +362,7 @@ export default function ListEmployee(props) {
                   onClick={() =>
                     handleDeleteDialogOpen(
                       employee.id,
-                      employee.first_name + " " + employee.last_name
+                      employee.user.first_name + " " + employee.user.last_name
                     )
                   }
                 >
@@ -367,12 +400,11 @@ export default function ListEmployee(props) {
             please change the information in the specified field below:
           </DialogContentText>
           <TextField
-            label="Employee Number"
-            margin="dense"
+            label="Employee Code"
             variant="outlined"
             type="number"
-            value={employeeNumber}
-            onChange={handleEmployeeNumberChange}
+            value={employeeCode}
+            onChange={handleEmployeeCodeChange}
             fullWidth
             InputProps={{
               startAdornment: (
@@ -381,48 +413,141 @@ export default function ListEmployee(props) {
             }}
           />
           <TextField
-            margin="dense"
+            variant="outlined"
             label="Private Email"
             value={privateEmail}
+            style={{ marginTop: 15 }}
             onChange={handlePrivateEmailChange}
             fullWidth
           />
           <TextField
-            margin="dense"
+            variant="outlined"
             label="Company Email Password"
+            style={{ marginTop: 15 }}
             value={companyEmailPassword}
-            onChange={handleCompanyEmailPasswordChange}
             fullWidth
           />
           <TextField
-            margin="dense"
+            variant="outlined"
             label="Bank Account Number"
             type="number"
             value={bankAccountNumber}
             onChange={handleBankAccountNumberChange}
             fullWidth
+            style={{ marginTop: 15 }}
           />
           <TextField
-            margin="dense"
+            variant="outlined"
             label="Bank Account Provider"
             value={bankAccountProvider}
             onChange={handleBankAccountProviderChange}
             fullWidth
+            style={{ marginTop: 15 }}
           />
+
           <TextField
-            margin="dense"
-            label="Division"
-            value={division}
-            onChange={handleDivisionChange}
+            type="number"
+            label="Phone Number"
+            variant="outlined"
+            style={{ marginTop: 15 }}
+            value={phone}
+            onChange={handlePhoneChange}
             fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">+62</InputAdornment>
+              ),
+            }}
           />
-          <TextField
-            margin="dense"
-            label="Title"
-            value={title}
-            onChange={handleTitleChange}
-            fullWidth
-          />
+
+          <FormControl
+            variant="outlined"
+            style={{ width: "100%", marginTop: 15 }}
+          >
+            <InputLabel htmlFor="status-in-loakarya">Status</InputLabel>
+            <Select
+              native
+              value={status}
+              onChange={handleStatusChange}
+              label="Division"
+              inputProps={{
+                name: "status-in-loakarya",
+                id: "status-in-loakarya",
+              }}
+              fullWidth
+            >
+              <option></option>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Freelance">Freelance</option>
+              <option value="Internship">Internship</option>
+            </Select>
+          </FormControl>
+
+          <FormControl
+            variant="outlined"
+            style={{ width: "100%", marginTop: 15 }}
+          >
+            <InputLabel htmlFor="level-in-loakarya">Level</InputLabel>
+            <Select
+              native
+              value={level}
+              onChange={handleLevelChange}
+              label="Level"
+              inputProps={{
+                name: "level-in-loakarya",
+                id: "level-in-loakarya",
+              }}
+              fullWidth
+            >
+              <option></option>
+              <option value="C Level">C Level</option>
+              <option value="VP">VP</option>
+              <option value="Head">Head</option>
+              <option value="Lead">Lead</option>
+              <option value="Senior">Senior</option>
+              <option value="Junior">Junior</option>
+              <option value="Intern">Intern</option>
+            </Select>
+          </FormControl>
+
+          <Grid container spacing={2} style={{ marginTop: 10 }}>
+            <Grid item xs={12} md={4}>
+              <FormControl variant="outlined" style={{ width: "100%" }}>
+                <InputLabel htmlFor="chapter-in-loakarya">Chapter</InputLabel>
+                <Select
+                  native
+                  value={chapter}
+                  onChange={handleChapterChange}
+                  label="Chapter"
+                  inputProps={{
+                    name: "chapter-in-loakarya",
+                    id: "chapter-in-loakarya",
+                  }}
+                  fullWidth
+                >
+                  <option></option>
+                  <option value="CEO Office">CEO Office</option>
+                  <option value="Marketing and Growth">
+                    Marketing and Growth
+                  </option>
+                  <option value="Product and Operational">
+                    Product and Operational
+                  </option>
+                  <option value="Technology">Technology</option>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={8}>
+              <TextField
+                label="Role"
+                variant="outlined"
+                fullWidth
+                value={role}
+                onChange={handleRoleChange}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleEditDialogClose} color="primary">
