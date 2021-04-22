@@ -81,32 +81,37 @@ export default function RegisterUser(props) {
   const [cookies, setCookies, removeCookies] = useCookies();
 
   const [captchaValue, setCaptchaValue] = useState("");
-  const [email, setEmail] = useState("");
 
+  const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [country, setCountry] = useState("");
+  const [birthday, setBirthday] = React.useState(
+    new Date("1999-01-01T00:00:00.000Z")
+  );
+  const [gender, setGender] = useState("0");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [address, setAddress] = useState("");
-  const [privateEmail, setPrivateEmail] = useState("");
 
+  const [employeeCode, setEmployeeCode] = useState("");
+  const [privateEmail, setPrivateEmail] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [bankAccountProvider, setBankAccountProvider] = useState("");
-  const [division, setDivision] = useState("");
-  const [title, setTitle] = useState("");
-  const [employeeNumber, setEmployeeNumber] = useState("");
+
+  const [status, setStatus] = useState("");
+  const [phone, setPhone] = useState("");
+  const [role, setRole] = useState("");
+  const [level, setLevel] = useState("");
+  const [chapter, setChapter] = useState("");
 
   const [companyEmailPassword, setCompanyEmailPassword] = useState("");
 
+  const [emailError, setEmailError] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarText, setSnackbarText] = useState("");
-
   const [dialogOpen, setDialogOpen] = useState(false);
-
   const [loading, setLoading] = useState(false);
-
   const [redirect, setRedirect] = useState();
 
   useEffect(() => {}, []);
@@ -128,88 +133,64 @@ export default function RegisterUser(props) {
   };
 
   const handleSaveEmployee = () => {
-    // if (
-    //   email &&
-    //   firstName &&
-    //   lastName &&
-    //   address &&
-    //   zipCode &&
-    //   city &&
-    //   province &&
-    //   country &&
-    //   privateEmail &&
-    //   bankAccountNumber &&
-    //   bankAccountProvider &&
-    //   division &&
-    //   title &&
-    //   employeeNumber
-    // ) {
-    //   if (captchaValue) {
-    //     console.table({
-    //       email: `${email}@loakarya.co`,
-    //       first_name: firstName,
-    //       last_name: lastName,
-    //       address,
-    //       zip_code: zipCode,
-    //       city,
-    //       province,
-    //       country,
-    //       private_email: privateEmail,
-    //       bank_account_number: bankAccountNumber,
-    //       bank_account_provider: bankAccountProvider,
-    //       division,
-    //       title,
-    //       employee_number: employeeNumber,
-    //     });
-    //     setLoading(true);
-    //     Axios.put(
-    //       "/employee",
-    //       {
-    //         email: `${email}@loakarya.co`,
-    //         first_name: firstName,
-    //         last_name: lastName,
-    //         address,
-    //         zip_code: zipCode,
-    //         city,
-    //         province,
-    //         country,
-    //         private_email: privateEmail,
-    //         bank_account_number: bankAccountNumber,
-    //         bank_account_provider: bankAccountProvider,
-    //         division,
-    //         title,
-    //         employee_number: employeeNumber,
-    //       },
-    //       {
-    //         headers: {
-    //           Authorization: `Bearer${cookies.access_token}`,
-    //         },
-    //       }
-    //     )
-    //       .then((response) => {
-    //         setCompanyEmailPassword(response.data.data.company_email_password);
-    //         handleSnackbarOpen("The new employee account has been saved.");
-    //         handleNext();
-    //       })
-    //       .catch((error) => {
-    //         console.error(error.response.data);
-    //         handleSnackbarOpen(
-    //           "Failed to save the new employee. Please recheck all the filled value."
-    //         );
-    //       })
-    //       .finally(() => {
-    //         setLoading(false);
-    //       });
-    //   } else {
-    //     handleSnackbarOpen(
-    //       "Please finish the reCAPTCHA challange to ensure you are not a robot."
-    //     );
-    //   }
-    // } else {
-    //   handleSnackbarOpen("Please fill all the required section!");
-    // }
+    if (!validateFilledField()) return;
 
-    handleNext();
+    if (emailError) {
+      handleSnackbarOpen("Invalid email format!");
+      return;
+    }
+    if (captchaValue) {
+      let birthdayInString = new Date(birthday).toISOString().split("T")[0];
+      // console.table({});
+      // return;
+      setLoading(true);
+      Axios.put(
+        "/employee",
+        {
+          email: `${email}@loakarya.co`,
+          first_name: firstName,
+          last_name: lastName,
+          birthday: birthdayInString,
+          gender: parseInt(gender),
+          address,
+          zip_code: zipCode,
+          city,
+          province,
+          employee_code: employeeCode,
+          private_email: privateEmail,
+          bank_account_number: bankAccountNumber,
+          bank_account_provider: bankAccountProvider,
+          status,
+          phone,
+          role,
+          level,
+          chapter,
+        },
+        {
+          headers: {
+            Authorization: `Bearer${cookies.access_token}`,
+          },
+        }
+      )
+        .then((response) => {
+          setCompanyEmailPassword(response.data.data.company_email_password);
+          handleSnackbarOpen("The new employee account has been saved.");
+          handleNext();
+        })
+        .catch((error) => {
+          console.error(error.response.data);
+          handleSnackbarOpen(
+            "Failed to save the new employee. Please recheck all the filled value."
+          );
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      handleSnackbarOpen(
+        "Please finish the reCAPTCHA challange to ensure you are not a robot."
+      );
+    }
   };
 
   const handleRedirectToEmployeeList = () => {
@@ -230,12 +211,16 @@ export default function RegisterUser(props) {
     setLastName(event.target.value);
   };
 
-  const handleEmailChange = (event) => {
-    setEmail(event.target.value);
+  const handleBirthdayChange = (date) => {
+    setBirthday(date);
   };
 
-  const handleCountryChange = (event) => {
-    setCountry(event.target.value);
+  const handleGenderChange = (event) => {
+    setGender(event.target.value);
+  };
+
+  const handleEmailChange = (event) => {
+    setEmail(event.target.value);
   };
 
   const handleProvinceChange = (event) => {
@@ -256,6 +241,9 @@ export default function RegisterUser(props) {
 
   const handlePrivateEmailChange = (event) => {
     setPrivateEmail(event.target.value);
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(event.target.value)) setEmailError(true);
+    else setEmailError(false);
   };
 
   const handleSnackbarOpen = (message) => {
@@ -275,28 +263,99 @@ export default function RegisterUser(props) {
     setBankAccountProvider(event.target.value);
   };
 
-  const handleDivisionChange = (event) => {
-    setDivision(event.target.value);
+  const handleChapterChange = (event) => {
+    setChapter(event.target.value);
   };
 
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
+  const handleRoleChange = (event) => {
+    setRole(event.target.value);
   };
 
-  const handleEmployeeNumberChange = (event) => {
-    setEmployeeNumber(event.target.value);
+  const handleEmployeeCodeChange = (event) => {
+    setEmployeeCode(event.target.value);
+  };
+
+  const handlePhoneChange = (event) => {
+    setPhone(event.target.value);
+  };
+
+  const handleStatusChange = (event) => {
+    setStatus(event.target.value);
+  };
+
+  const handleLevelChange = (event) => {
+    setLevel(event.target.value);
   };
 
   const handleDialogClose = () => {
     setDialogOpen(false);
   };
 
-  const [selectedDate, setSelectedDate] = React.useState(
-    new Date("1999-01-01T00:00:00.000Z")
-  );
+  const validateFilledField = () => {
+    let error = [];
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+    const fieldToCheck = [
+      email,
+      firstName,
+      lastName,
+      birthday,
+      gender,
+      address,
+      zipCode,
+      city,
+      province,
+      employeeCode,
+      privateEmail,
+      bankAccountNumber,
+      bankAccountProvider,
+      status,
+      phone,
+      role,
+      level,
+      chapter,
+    ];
+
+    const errMessage = [
+      "company email",
+      "first name",
+      "last name",
+      "birthday",
+      "gender",
+      "address",
+      "zip code",
+      "city",
+      "province",
+      "employee code",
+      "private email",
+      "bank account number",
+      "bank account provider",
+      "status",
+      "phone",
+      "role",
+      "level",
+      "chapter",
+    ];
+
+    fieldToCheck.forEach((ftc, inx) => {
+      if (!ftc) error.push(errMessage[inx]);
+    });
+
+    if (error.length > 0) {
+      let errorString = "";
+      error.map((e, i) => {
+        if (i + 1 != error.length) errorString += `${e}, `;
+        else errorString += `${e}. `;
+      });
+      setTimeout(
+        () =>
+          handleSnackbarOpen(
+            `Please fill all the required section! missing field: ${errorString}`
+          ),
+        500
+      );
+      return false;
+    }
+    return true;
   };
 
   const getStepContent = (step) => {
@@ -304,7 +363,7 @@ export default function RegisterUser(props) {
       case 0:
         return (
           <Grid container>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} lg={6}>
               <Paper style={{ padding: 20 }}>
                 <Typography variant="subtitle1">
                   Please fill the form below to input the new employee's basic
@@ -355,8 +414,8 @@ export default function RegisterUser(props) {
                         format="MM/dd/yyyy"
                         margin="normal"
                         label="Birthday"
-                        value={selectedDate}
-                        onChange={handleDateChange}
+                        value={birthday}
+                        onChange={handleBirthdayChange}
                         style={{ marginLeft: 7 }}
                       />
                     </MuiPickersUtilsProvider>
@@ -377,8 +436,8 @@ export default function RegisterUser(props) {
                         <InputLabel htmlFor="user-gender">Gender</InputLabel>
                         <Select
                           native
-                          // value={division}
-                          // onChange={handleDivisionChange}
+                          value={gender}
+                          onChange={handleGenderChange}
                           label="Division"
                           inputProps={{
                             name: "user-gender",
@@ -386,8 +445,8 @@ export default function RegisterUser(props) {
                           }}
                           fullWidth
                         >
-                          <option value="Perempuan">Female</option>
-                          <option value="Laki-Laki">Male</option>
+                          <option value="0">Female</option>
+                          <option value="1">Male</option>
                         </Select>
                       </FormControl>
                     </div>
@@ -435,7 +494,7 @@ export default function RegisterUser(props) {
       case 1:
         return (
           <Grid container>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} lg={6}>
               <Paper style={{ padding: 20 }}>
                 <Typography variant="subtitle1">
                   Please fill the form below to input the new employee's basic
@@ -501,6 +560,7 @@ export default function RegisterUser(props) {
                 </Grid>
 
                 <TextField
+                  error={emailError}
                   label="Private Email"
                   variant="outlined"
                   style={{ marginTop: 15 }}
@@ -514,8 +574,8 @@ export default function RegisterUser(props) {
                   label="Phone Number"
                   variant="outlined"
                   style={{ marginTop: 15 }}
-                  // value={privateEmail}
-                  // onChange={handlePrivateEmailChange}
+                  value={phone}
+                  onChange={handlePhoneChange}
                   fullWidth
                   InputProps={{
                     startAdornment: (
@@ -531,8 +591,8 @@ export default function RegisterUser(props) {
                   <InputLabel htmlFor="status-in-loakarya">Status</InputLabel>
                   <Select
                     native
-                    // value={division}
-                    // onChange={handleDivisionChange}
+                    value={status}
+                    onChange={handleStatusChange}
                     label="Division"
                     inputProps={{
                       name: "status-in-loakarya",
@@ -555,8 +615,8 @@ export default function RegisterUser(props) {
                   <InputLabel htmlFor="level-in-loakarya">Level</InputLabel>
                   <Select
                     native
-                    // value={division}
-                    // onChange={handleDivisionChange}
+                    value={level}
+                    onChange={handleLevelChange}
                     label="Level"
                     inputProps={{
                       name: "level-in-loakarya",
@@ -583,8 +643,8 @@ export default function RegisterUser(props) {
                       </InputLabel>
                       <Select
                         native
-                        // value={division}
-                        // onChange={handleDivisionChange}
+                        value={chapter}
+                        onChange={handleChapterChange}
                         label="Chapter"
                         inputProps={{
                           name: "chapter-in-loakarya",
@@ -609,20 +669,20 @@ export default function RegisterUser(props) {
                       label="Role"
                       variant="outlined"
                       fullWidth
-                      value={title}
-                      onChange={handleTitleChange}
+                      value={role}
+                      onChange={handleRoleChange}
                     />
                   </Grid>
                 </Grid>
 
                 <TextField
-                  label="Employee Number"
+                  label="Employee Code"
                   variant="outlined"
                   style={{ marginTop: 15 }}
                   fullWidth
                   type="number"
-                  value={employeeNumber}
-                  onChange={handleEmployeeNumberChange}
+                  value={employeeCode}
+                  onChange={handleEmployeeCodeChange}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -730,7 +790,7 @@ export default function RegisterUser(props) {
               {getStepContent(activeStep)}
             </Box>
             <Grid container>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} lg={6}>
                 <div
                   style={{
                     display: "flex",
